@@ -13,9 +13,7 @@ import NotFound from "./pages/NotFound";
 
 // Import necessary packages
 import { create } from "zustand";
-<lov-add-dependency>zustand@4.4.7</lov-add-dependency>
-<lov-add-dependency>@types/node@18.19.4</lov-add-dependency>
-<lov-add-dependency>axios@1.6.7</lov-add-dependency>
+import axios from "axios";
 
 const queryClient = new QueryClient();
 
