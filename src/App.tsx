@@ -11,7 +11,7 @@ import SignUp from "./pages/SignUp";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
-// Import necessary packages
+// Import necessary packages (these will be used by other parts of the application)
 import { create } from "zustand";
 import axios from "axios";
 
