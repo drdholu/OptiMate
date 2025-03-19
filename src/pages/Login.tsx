@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
@@ -8,10 +7,10 @@ const Login = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
-  // Redirect to home if already authenticated
+  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
   

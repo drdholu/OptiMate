@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       title: "Logged out",
       description: "You've been successfully logged out.",
     });
-    navigate('/login');
+    navigate('/');
   };
   
   // Enhanced signup function with navigation

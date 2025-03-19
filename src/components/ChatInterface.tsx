@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { SendIcon, Sparkles } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,49 +6,56 @@ import { useStore } from '@/lib/store';
 import MessageBubble from '@/components/MessageBubble';
 import TypingIndicator from '@/components/TypingIndicator';
 import { cn } from '@/lib/utils';
+import { chatAPI } from '@/api/api';
+import { Message } from '@/lib/store';
 
 const ChatInterface = () => {
   const [inputValue, setInputValue] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
-  const { 
-    getActiveConversation, 
-    sendMessage, 
-    isTyping, 
-    createNewConversation,
-    activeConversationId
-  } = useStore();
+  // const { 
+  //   getActiveConversation, 
+  //   sendMessage, 
+  //   isTyping, 
+  //   createNewConversation,
+  //   activeConversationId
+  // } = useStore();
   
-  const conversation = getActiveConversation();
-  const messages = conversation?.messages || [];
+  // const conversation = getActiveConversation();
+  // const messages = conversation?.messages || [];
   
   // Scroll to bottom when messages change or when typing starts/stops
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages]);
   
   // Focus input on mount and when conversation changes
-  useEffect(() => {
-    if (inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-    }
-  }, [activeConversationId]);
+  // useEffect(() => {
+  //   if (inputRef.current) {
+  //     setTimeout(() => {
+  //       inputRef.current?.focus();
+  //     }, 100);
+  //   }
+  // }, [activeConversationId]);
   
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
-    
-    if (!conversation) {
-      // Create a new conversation if none exists
-      createNewConversation();
-    }
-    
-    const messageToSend = inputValue;
+
+    // Add user message to chat
+    setMessages(prevMessages => [...prevMessages, { id: "user", text: inputValue, role: "user", timestamp: Date.now(), content: inputValue }]);
     setInputValue('');
-    
-    await sendMessage(messageToSend);
+
+    try {
+      const response = await chatAPI.sendMessage(inputValue);
+
+      // Add AI response to chat
+      setMessages(prevMessages => [...prevMessages, { id: "ai", text: response.text, role: "assistant", timestamp: Date.now(), content: response.text }]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Handle error appropriately (e.g., display an error message)
+    }
   };
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -114,12 +120,12 @@ const ChatInterface = () => {
           <div className="divide-y divide-slate-100 dark:divide-slate-800/40">
             {messages.map((message, i) => (
               <MessageBubble 
-                key={message.id} 
+                key={i} 
                 message={message} 
                 isLastMessage={i === messages.length - 1}
               />
             ))}
-            {isTyping && <TypingIndicator />}
+            {/* {isTyping && <TypingIndicator />} */}
             <div ref={messagesEndRef} />
           </div>
         )}

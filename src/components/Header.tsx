@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'; // Import useLocation
 import { Settings, User, LogOut, Plus, Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useStore } from '@/lib/store';
@@ -17,9 +16,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth(); // Get auth state
   const createNewConversation = useStore((state) => state.createNewConversation);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation(); // Get current location
   
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -29,6 +29,9 @@ export function Header() {
     createNewConversation();
     setIsMobileMenuOpen(false);
   };
+
+  // Determine if the user is on the home page
+  const isHomePage = location.pathname === '/';
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/50 dark:border-slate-800/50">
@@ -46,58 +49,70 @@ export function Header() {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={createNewConversation}
-              className="group flex items-center gap-1.5"
-            >
-              <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
-              <span>New Chat</span>
-            </Button>
-            
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Avatar className="h-8 w-8 transition-all hover:scale-105">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="text-xs bg-mate-100 text-mate-800">
-                        {user.name.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 glass-card">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="cursor-pointer flex items-center gap-2">
-                      <Settings size={16} />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer flex items-center gap-2">
-                      <User size={16} />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={logout}
-                    className="cursor-pointer flex items-center gap-2 text-red-500 focus:text-red-500"
-                  >
-                    <LogOut size={16} />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {isHomePage && !isAuthenticated ? (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" size="sm">Log in</Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  // onClick={createNewConversation}
+                  className="group flex items-center gap-1.5"
+                >
+                  <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
+                  <Link to="/dashboard">New Chat</Link>
+                </Button>
+                {isAuthenticated && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full">
+                        <Avatar className="h-8 w-8 transition-all hover:scale-105">
+                          <AvatarImage src={user?.avatar} alt={user?.name} />
+                          <AvatarFallback className="text-xs bg-mate-100 text-mate-800">
+                            {user?.name?.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 glass-card">
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user?.name}</p>
+                          <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings" className="cursor-pointer flex items-center gap-2">
+                          <Settings size={16} />
+                          <span>Settings</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile" className="cursor-pointer flex items-center gap-2">
+                          <User size={16} />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={logout}
+                        className="cursor-pointer flex items-center gap-2 text-red-500 focus:text-red-500"
+                      >
+                        <LogOut size={16} />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </>
             )}
           </div>
           
@@ -123,7 +138,7 @@ export function Header() {
           <div className="container px-4 flex flex-col gap-2">
             <Button
               variant="ghost"
-              onClick={handleNewChat}
+              // onClick={handleNewChat}
               className="w-full justify-start gap-2"
             >
               <Plus size={16} />

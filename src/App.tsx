@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,10 +9,8 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-
-// Import necessary packages (these will be used by other parts of the application)
-import { create } from "zustand";
-import axios from "axios";
+import Profile from "./pages/Profile";
+import Home from "./pages/Home";
 
 const queryClient = new QueryClient();
 
@@ -25,10 +22,12 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Index />} /> {/* New dashboard route */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
