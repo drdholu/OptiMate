@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -81,7 +80,7 @@ const Settings = () => {
   };
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-1 pt-16 pb-12">
         <div className="container max-w-4xl mx-auto px-4 animate-fade-in">
@@ -98,10 +97,10 @@ const Settings = () => {
             <h1 className="text-2xl font-bold">Settings</h1>
           </div>
           
-          <div className="glass-card p-6 space-y-5">
+          <div className="card p-6 space-y-5 bg-card shadow-sm border border-border/50 rounded-xl">
             <div className="space-y-1">
               <h2 className="text-lg font-medium">Preferences</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Customize your experience with OptiMate
               </p>
             </div>
@@ -115,7 +114,7 @@ const Settings = () => {
                     <Label htmlFor={setting.id} className="text-base">
                       {setting.label}
                     </Label>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                       {setting.description}
                     </p>
                   </div>

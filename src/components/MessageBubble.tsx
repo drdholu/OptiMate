@@ -1,12 +1,14 @@
-
+import React from 'react';
 import { memo } from 'react';
-import { type Message } from '@/lib/store';
+import { Message } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
-interface MessageBubbleProps {
+export interface MessageBubbleProps {
   message: Message;
-  isLastMessage?: boolean;
+  isLastMessage: boolean;
+  renderMarkdown?: boolean; // Make this optional with '?'
 }
 
 function formatTime(timestamp: number): string {
@@ -17,7 +19,11 @@ function formatTime(timestamp: number): string {
   });
 }
 
-const MessageBubble = ({ message, isLastMessage }: MessageBubbleProps) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ 
+  message, 
+  isLastMessage,
+  renderMarkdown = false // Default to false if not provided
+}) => {
   const isUser = message.role === 'user';
   
   return (
@@ -60,7 +66,21 @@ const MessageBubble = ({ message, isLastMessage }: MessageBubbleProps) => {
           isLastMessage && "animate-slide-in",
           isUser ? "prose-p:text-slate-600 dark:prose-p:text-slate-300" : "prose-p:text-slate-700 dark:prose-p:text-slate-200"
         )}>
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          {renderMarkdown ? (
+            <ReactMarkdown
+              // Add your markdown components here
+              // For example, code syntax highlighting
+              // components={{
+              //   code({node, inline, className, children, ...props}) {
+              //     // Implementation for code blocks
+              //   }
+              // }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          ) : (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          )}
         </div>
       </div>
     </div>

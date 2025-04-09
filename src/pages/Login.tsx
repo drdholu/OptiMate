@@ -19,7 +19,7 @@ const Login = () => {
   }
   
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background dark:bg-dark-mesh bg-[size:50px_50px]">
       <div className="w-full max-w-md animate-fade-in">
         <LoginForm />
       </div>

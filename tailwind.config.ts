@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -64,17 +63,17 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				mate: {
-					50: '#f0f7ff',
-					100: '#e0eefe',
-					200: '#bae0fd',
-					300: '#7ccafb',
-					400: '#36aef5',
-					500: '#0c93e4',
-					600: '#0075c4',
-					700: '#015fa0',
-					800: '#065184',
-					900: '#0b446e',
-					950: '#072b49',
+					50: '#f2eafa',
+					100: '#e4d5f5',
+					200: '#c8abeb',
+					300: '#ad82e0',
+					400: '#9158d6',
+					500: '#762ecc',
+					600: '#6025a3',
+					700: '#491c7a',
+					800: '#311352',
+					900: '#180929',
+					950: '#0c0414',
 				}
 			},
 			borderRadius: {
@@ -82,14 +81,17 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			borderWidth: {
+				'3': '3px'
+			},
 			keyframes: {
 				'accordion-down': {
 					from: { height: '0' },
-					to: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
 					from: { height: 'var(--radix-accordion-content-height)' },
-					to: { height: '0' },
+					to: { height: '0' }
 				},
 				'fade-in': {
 					from: { opacity: '0' },
@@ -140,8 +142,16 @@ export default {
 			boxShadow: {
 				'soft': '0 2px 10px rgba(0, 0, 0, 0.05)',
 				'glass': '0 8px 32px rgba(0, 0, 0, 0.08)',
+				'glow': '0 0 15px rgba(116, 45, 204, 0.15)',
+				'inner-glow': 'inset 0 0 10px rgba(116, 45, 204, 0.1)',
 			},
-		}
+			backgroundImage: {
+				'dark-mesh': 'radial-gradient(at 80% 10%, hsla(228, 28%, 15%, 0.5) 0px, transparent 50%), radial-gradient(at 10% 90%, hsla(228, 22%, 12%, 0.6) 0px, transparent 50%)',
+				'subtle-dots': 'radial-gradient(hsla(var(--foreground), 0.05) 1px, transparent 1px)',
+				'subtle-grid': 'linear-gradient(transparent 1px, transparent 1px), linear-gradient(to right, hsla(var(--foreground), 0.05) 1px, transparent 1px)',
+				'gradient-border': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary)/0.5))',
+			}
+		},
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [require('tailwindcss-animate')],
 } satisfies Config;
