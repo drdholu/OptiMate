@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { chatAPI } from '@/api/api'; // Import the chat API
 
 export interface Message {
   id: string;
@@ -30,6 +31,7 @@ interface ChatState {
   conversations: Conversation[];
   activeConversationId: string | null;
   isTyping: boolean;
+  isNewChat: boolean;
 }
 
 interface AppState extends UserState, ChatState {
@@ -45,6 +47,7 @@ interface AppState extends UserState, ChatState {
   sendMessage: (content: string) => Promise<void>;
   getActiveConversation: () => Conversation | undefined;
   setIsTyping: (isTyping: boolean) => void;
+  startNewChat: () => void;
 }
 
 export const useStore = create<AppState>()(
@@ -58,6 +61,7 @@ export const useStore = create<AppState>()(
       conversations: [],
       activeConversationId: null,
       isTyping: false,
+      isNewChat: true,
 
       // Auth actions
       login: async (email, password) => {
@@ -105,6 +109,13 @@ export const useStore = create<AppState>()(
         set({ activeConversationId: conversationId });
       },
 
+      startNewChat: () => {
+        set({
+          activeConversationId: null,
+          isNewChat: true
+        });
+      },
+
       createNewConversation: () => {
         const newId = Date.now().toString();
         const newConversation = {
@@ -117,7 +128,8 @@ export const useStore = create<AppState>()(
 
         set(state => ({
           conversations: [newConversation, ...state.conversations],
-          activeConversationId: newId
+          activeConversationId: newId,
+          isNewChat: false
         }));
       },
 
@@ -141,14 +153,28 @@ export const useStore = create<AppState>()(
       },
 
       sendMessage: async (content) => {
-        const { activeConversationId, conversations } = get();
-        if (!activeConversationId && conversations.length === 0) {
-          // Create a new conversation if none exists
-          get().createNewConversation();
+        const { activeConversationId, conversations, isNewChat } = get();
+        let currentId = activeConversationId;
+
+        // Create a new conversation if none exists or we're starting a new chat
+        if (!currentId || isNewChat) {
+          const newId = Date.now().toString();
+          const newConversation = {
+            id: newId,
+            title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          set(state => ({
+            conversations: [newConversation, ...state.conversations],
+            activeConversationId: newId,
+            isNewChat: false
+          }));
+          currentId = newId;
         }
 
-        const currentId = get().activeConversationId;
-        if (!currentId) return;
+        if (!currentId) return; // Should not happen, but safety check
 
         // Add user message
         const userMessage: Message = {
@@ -161,8 +187,15 @@ export const useStore = create<AppState>()(
         set(state => {
           const updatedConversations = state.conversations.map(conv => {
             if (conv.id === currentId) {
+              // Update title only if it's the very first message in a newly created conversation
+              const isFirstMessage = conv.messages.length === 0;
+              const title = isFirstMessage
+                ? userMessage.content.slice(0, 30) + (userMessage.content.length > 30 ? '...' : '')
+                : conv.title;
+
               return {
                 ...conv,
+                title, // Update title if needed
                 messages: [...conv.messages, userMessage],
                 updatedAt: Date.now()
               };
@@ -176,50 +209,74 @@ export const useStore = create<AppState>()(
           };
         });
 
-        // Simulate API response delay (1-3 seconds)
-        const responseDelay = Math.floor(Math.random() * 2000) + 1000;
+        try {
+          // Call the actual backend API
+          const response = await chatAPI.sendMessage(content);
 
-        // Simulate AI response
-        await new Promise(resolve => setTimeout(resolve, responseDelay));
+          if (response && response.text && currentId) { // Check if currentId is still valid
+            const assistantMessage: Message = {
+              id: response.id || `assistant-${Date.now()}`, // Use ID from response if available
+              content: response.text,
+              role: 'assistant',
+              timestamp: Date.now()
+            };
 
-        const responses = [
-          "That's an interesting question!",
-          "Let me think about that...",
-          "Here's what I found:",
-          "I'm not sure, but I can look it up.",
-          "Great question! Here's a possible solution:"
-        ];
-
-        const assistantMessage: Message = {
-          id: `assistant-${Date.now()}`,
-          content: responses[Math.floor(Math.random() * responses.length)],
-          role: 'assistant',
-          timestamp: Date.now()
-        };
-
-        set(state => {
-          const updatedConversations = state.conversations.map(conv => {
-            if (conv.id === currentId) {
-              // Update conversation title if it's the first message
-              const title = conv.messages.length === 0
-                ? userMessage.content.slice(0, 30) + (userMessage.content.length > 30 ? '...' : '')
-                : conv.title;
+            set(state => {
+              const finalConversations = state.conversations.map(conv => {
+                if (conv.id === currentId) {
+                  return {
+                    ...conv,
+                    messages: [...conv.messages, assistantMessage],
+                    updatedAt: Date.now()
+                  };
+                }
+                return conv;
+              });
 
               return {
-                ...conv,
-                title,
-                messages: [...conv.messages, assistantMessage],
-                updatedAt: Date.now()
+                conversations: finalConversations,
+                isTyping: false
               };
-            }
-            return conv;
-          });
-
-          return {
-            conversations: updatedConversations,
-            isTyping: false
+            });
+          } else {
+             console.error('Invalid API response:', response);
+             // Add error message to chat
+            const errorMessage: Message = {
+              id: `system-${Date.now()}`,
+              content: response.error || 'Failed to get a response from the assistant.',
+              role: 'system',
+              timestamp: Date.now()
+            };
+             set(state => {
+               const finalConversations = state.conversations.map(conv => {
+                 if (conv.id === currentId) {
+                   return { ...conv, messages: [...conv.messages, errorMessage] };
+                 }
+                 return conv;
+               });
+               return { conversations: finalConversations, isTyping: false };
+             });
+          }
+        } catch (error) {
+          console.error('Error sending message:', error);
+          const errorMessage: Message = {
+            id: `system-${Date.now()}`,
+            content: 'An error occurred while communicating with the backend.',
+            role: 'system',
+            timestamp: Date.now()
           };
-        });
+          // Need to get currentId again in case it changed while waiting for API
+          const finalCurrentId = get().activeConversationId;
+          set(state => {
+            const finalConversations = state.conversations.map(conv => {
+              if (conv.id === finalCurrentId) { // Use potentially updated currentId
+                return { ...conv, messages: [...conv.messages, errorMessage] };
+              }
+              return conv;
+            });
+            return { conversations: finalConversations, isTyping: false };
+          });
+        }
       },
 
       getActiveConversation: () => {

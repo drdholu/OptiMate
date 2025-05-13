@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import tailwindAnimate from "tailwindcss-animate";
+import tailwindTypography from "@tailwindcss/typography";
 
 export default {
 	darkMode: ["class"],
@@ -150,8 +152,48 @@ export default {
 				'subtle-dots': 'radial-gradient(hsla(var(--foreground), 0.05) 1px, transparent 1px)',
 				'subtle-grid': 'linear-gradient(transparent 1px, transparent 1px), linear-gradient(to right, hsla(var(--foreground), 0.05) 1px, transparent 1px)',
 				'gradient-border': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary)/0.5))',
-			}
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						maxWidth: '100%',
+						color: 'var(--tw-prose-body)',
+						'[class~="lead"]': {
+							color: 'var(--tw-prose-lead)',
+						},
+						a: {
+							color: 'var(--tw-prose-links)',
+							textDecoration: 'underline',
+							fontWeight: '500',
+							'&:hover': {
+								color: 'var(--tw-prose-links-hover)',
+							},
+						},
+						strong: {
+							color: 'var(--tw-prose-bold)',
+							fontWeight: '600',
+						},
+						code: {
+							color: 'var(--tw-prose-code)',
+							backgroundColor: 'var(--tw-prose-code-bg)',
+							padding: '0.2em 0.4em',
+							borderRadius: '0.25rem',
+							fontWeight: '500',
+						},
+						pre: {
+							color: 'var(--tw-prose-pre-code)',
+							backgroundColor: 'var(--tw-prose-pre-bg)',
+							padding: '1rem',
+							borderRadius: '0.5rem',
+							overflowX: 'auto',
+						},
+					},
+				},
+			},
 		},
 	},
-	plugins: [require('tailwindcss-animate')],
+	plugins: [
+		tailwindAnimate,
+		tailwindTypography,
+	],
 } satisfies Config;

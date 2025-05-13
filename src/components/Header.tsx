@@ -63,14 +63,6 @@ export function Header() {
             ) : (
               <>
                 <ThemeToggle />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="group flex items-center gap-1.5"
-                >
-                  <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
-                  <Link to="/dashboard">New Chat</Link>
-                </Button>
                 {isAuthenticated && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -91,6 +83,12 @@ export function Header() {
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="cursor-pointer flex items-center gap-2">
+                          <Plus size={16} />
+                          <span>New Chat</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/settings" className="cursor-pointer flex items-center gap-2">
                           <Settings size={16} />
@@ -138,9 +136,11 @@ export function Header() {
           )}
         >
           <div className="container px-4 flex flex-col gap-2">
+            <ThemeToggle />
+            
             <Button
               variant="ghost"
-              // onClick={handleNewChat}
+              onClick={handleNewChat}
               className="w-full justify-start gap-2"
             >
               <Plus size={16} />
