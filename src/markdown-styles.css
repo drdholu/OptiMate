@@ -1,0 +1,55 @@
+/* Markdown styles for message content */
+.message-content {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.message-content p {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+}
+
+.message-content pre {
+  background-color: #1e1e1e;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin: 0.75rem 0;
+  overflow-x: auto;
+}
+
+.message-content code {
+  font-family: monospace;
+  font-size: 0.875rem;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+}
+
+/* User message styling */
+.bg-mate-500 .message-content {
+  color: white;
+}
+
+.bg-mate-500 .message-content a {
+  color: white;
+  text-decoration: underline;
+}
+
+.bg-mate-500 .message-content code {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.bg-mate-500 .message-content pre {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.bg-mate-500 .message-content pre code {
+  background-color: transparent;
+}
+
+.dark .message-content code {
+  background-color: #334155;
+  color: #e2e8f0;
+} 

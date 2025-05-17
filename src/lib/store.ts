@@ -1,6 +1,6 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { chatAPI } from '@/api/api'; // Import the chat API
 
 export interface Message {
   id: string;
@@ -31,6 +31,7 @@ interface ChatState {
   conversations: Conversation[];
   activeConversationId: string | null;
   isTyping: boolean;
+  isNewChat: boolean;
 }
 
 interface AppState extends UserState, ChatState {
@@ -38,7 +39,7 @@ interface AppState extends UserState, ChatState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  
+
   // Chat actions
   setActiveConversation: (conversationId: string) => void;
   createNewConversation: () => void;
@@ -46,6 +47,7 @@ interface AppState extends UserState, ChatState {
   sendMessage: (content: string) => Promise<void>;
   getActiveConversation: () => Conversation | undefined;
   setIsTyping: (isTyping: boolean) => void;
+  startNewChat: () => void;
 }
 
 export const useStore = create<AppState>()(
@@ -54,17 +56,18 @@ export const useStore = create<AppState>()(
       // Auth state
       isAuthenticated: false,
       user: null,
-      
+
       // Chat state
       conversations: [],
       activeConversationId: null,
       isTyping: false,
-      
+      isNewChat: true,
+
       // Auth actions
       login: async (email, password) => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Mock successful login
         set({
           isAuthenticated: true,
@@ -76,7 +79,7 @@ export const useStore = create<AppState>()(
           }
         });
       },
-      
+
       logout: () => {
         set({
           isAuthenticated: false,
@@ -84,11 +87,11 @@ export const useStore = create<AppState>()(
           activeConversationId: null
         });
       },
-      
+
       signup: async (name, email, password) => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Mock successful signup
         set({
           isAuthenticated: true,
@@ -100,12 +103,19 @@ export const useStore = create<AppState>()(
           }
         });
       },
-      
+
       // Chat actions
       setActiveConversation: (conversationId) => {
         set({ activeConversationId: conversationId });
       },
-      
+
+      startNewChat: () => {
+        set({
+          activeConversationId: null,
+          isNewChat: true
+        });
+      },
+
       createNewConversation: () => {
         const newId = Date.now().toString();
         const newConversation = {
@@ -115,43 +125,57 @@ export const useStore = create<AppState>()(
           createdAt: Date.now(),
           updatedAt: Date.now()
         };
-        
+
         set(state => ({
           conversations: [newConversation, ...state.conversations],
-          activeConversationId: newId
+          activeConversationId: newId,
+          isNewChat: false
         }));
       },
-      
+
       deleteConversation: (conversationId) => {
         set(state => {
           const filteredConversations = state.conversations.filter(
             conv => conv.id !== conversationId
           );
-          
+
           // If we're deleting the active conversation, set a new active one or null
           let newActiveId = state.activeConversationId;
           if (state.activeConversationId === conversationId) {
             newActiveId = filteredConversations.length > 0 ? filteredConversations[0].id : null;
           }
-          
+
           return {
             conversations: filteredConversations,
             activeConversationId: newActiveId
           };
         });
       },
-      
+
       sendMessage: async (content) => {
-        const { activeConversationId, conversations } = get();
-        
-        if (!activeConversationId && conversations.length === 0) {
-          // Create a new conversation if none exists
-          get().createNewConversation();
+        const { activeConversationId, conversations, isNewChat } = get();
+        let currentId = activeConversationId;
+
+        // Create a new conversation if none exists or we're starting a new chat
+        if (!currentId || isNewChat) {
+          const newId = Date.now().toString();
+          const newConversation = {
+            id: newId,
+            title: content.slice(0, 30) + (content.length > 30 ? '...' : ''),
+            messages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+          set(state => ({
+            conversations: [newConversation, ...state.conversations],
+            activeConversationId: newId,
+            isNewChat: false
+          }));
+          currentId = newId;
         }
-        
-        const currentId = get().activeConversationId;
-        if (!currentId) return;
-        
+
+        if (!currentId) return; // Should not happen, but safety check
+
         // Add user message
         const userMessage: Message = {
           id: `user-${Date.now()}`,
@@ -159,82 +183,109 @@ export const useStore = create<AppState>()(
           role: 'user',
           timestamp: Date.now()
         };
-        
+
         set(state => {
           const updatedConversations = state.conversations.map(conv => {
             if (conv.id === currentId) {
+              // Update title only if it's the very first message in a newly created conversation
+              const isFirstMessage = conv.messages.length === 0;
+              const title = isFirstMessage
+                ? userMessage.content.slice(0, 30) + (userMessage.content.length > 30 ? '...' : '')
+                : conv.title;
+
               return {
                 ...conv,
+                title, // Update title if needed
                 messages: [...conv.messages, userMessage],
                 updatedAt: Date.now()
               };
             }
             return conv;
           });
-          
+
           return {
             conversations: updatedConversations,
             isTyping: true
           };
         });
-        
-        // Simulate API response delay (1-3 seconds)
-        const responseDelay = Math.floor(Math.random() * 2000) + 1000;
-        await new Promise(resolve => setTimeout(resolve, responseDelay));
-        
-        // Add assistant response
-        const responses = [
-          "I've analyzed your code and found a possible optimization in the algorithm.",
-          "That's a great approach! Let me suggest a few ways to make it more efficient.",
-          "The code looks good. If you want to improve performance, consider using memoization here.",
-          "I see you're using a nested loop. We could optimize this with a hash map approach.",
-          "Your solution works, but there's a potential edge case you might want to handle.",
-          "The time complexity of this algorithm is O(n²). We could improve it to O(n log n).",
-          "Have you considered using a more declarative approach here?",
-          "This is well-structured code. Just a small suggestion: consider extracting this logic into a separate function.",
-          "Nice implementation! Another approach could be using a more functional programming style.",
-          "I notice you're not handling null values. Would you like me to suggest a more robust solution?"
-        ];
-        
-        const assistantMessage: Message = {
-          id: `assistant-${Date.now()}`,
-          content: responses[Math.floor(Math.random() * responses.length)],
-          role: 'assistant',
-          timestamp: Date.now()
-        };
-        
-        set(state => {
-          const updatedConversations = state.conversations.map(conv => {
-            if (conv.id === currentId) {
-              // Update conversation title if it's the first message
-              const title = conv.messages.length === 1 
-                ? conv.messages[0].content.slice(0, 30) + (conv.messages[0].content.length > 30 ? '...' : '') 
-                : conv.title;
-              
+
+        try {
+          // Call the actual backend API
+          const response = await chatAPI.sendMessage(content);
+
+          if (response && response.text && currentId) { // Check if currentId is still valid
+            const assistantMessage: Message = {
+              id: response.id || `assistant-${Date.now()}`, // Use ID from response if available
+              content: response.text,
+              role: 'assistant',
+              timestamp: Date.now()
+            };
+
+            set(state => {
+              const finalConversations = state.conversations.map(conv => {
+                if (conv.id === currentId) {
+                  return {
+                    ...conv,
+                    messages: [...conv.messages, assistantMessage],
+                    updatedAt: Date.now()
+                  };
+                }
+                return conv;
+              });
+
               return {
-                ...conv,
-                title,
-                messages: [...conv.messages, assistantMessage],
-                updatedAt: Date.now()
+                conversations: finalConversations,
+                isTyping: false
               };
-            }
-            return conv;
-          });
-          
-          return {
-            conversations: updatedConversations,
-            isTyping: false
+            });
+          } else {
+             console.error('Invalid API response:', response);
+             // Add error message to chat
+            const errorMessage: Message = {
+              id: `system-${Date.now()}`,
+              content: response.error || 'Failed to get a response from the assistant.',
+              role: 'system',
+              timestamp: Date.now()
+            };
+             set(state => {
+               const finalConversations = state.conversations.map(conv => {
+                 if (conv.id === currentId) {
+                   return { ...conv, messages: [...conv.messages, errorMessage] };
+                 }
+                 return conv;
+               });
+               return { conversations: finalConversations, isTyping: false };
+             });
+          }
+        } catch (error) {
+          console.error('Error sending message:', error);
+          const errorMessage: Message = {
+            id: `system-${Date.now()}`,
+            content: 'An error occurred while communicating with the backend.',
+            role: 'system',
+            timestamp: Date.now()
           };
-        });
+          // Need to get currentId again in case it changed while waiting for API
+          const finalCurrentId = get().activeConversationId;
+          set(state => {
+            const finalConversations = state.conversations.map(conv => {
+              if (conv.id === finalCurrentId) { // Use potentially updated currentId
+                return { ...conv, messages: [...conv.messages, errorMessage] };
+              }
+              return conv;
+            });
+            return { conversations: finalConversations, isTyping: false };
+          });
+        }
       },
-      
+
       getActiveConversation: () => {
         const { activeConversationId, conversations } = get();
         if (!activeConversationId) return undefined;
-        
+
         return conversations.find(conv => conv.id === activeConversationId);
       },
-      
+
       setIsTyping: (isTyping) => {
         set({ isTyping });
       }
