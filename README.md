@@ -3,7 +3,7 @@
 OptiMate is an AI-powered code optimization assistant that helps developers improve their code quality and efficiency. 
 
 While general-purpose AI models like ChatGPT excel at broad programming tasks, OptiMate is specifically fine-tuned for code optimization, offering more precise and contextual suggestions for performance improvements.
-
+contributer: Ishan
 
 ## Setup
 
